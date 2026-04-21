@@ -145,7 +145,7 @@ export default function ProblemsPage() {
     router.refresh();
   }
 
-  const correctCount = [...userAnswers.values()].filter((a) => a.is_correct).length;
+ const correctCount = Array.from(userAnswers.values()).filter((a) => a.is_correct).length;
   const totalCount = problems.length;
   const progress = totalCount > 0 ? (correctCount / totalCount) * 100 : 0;
 
