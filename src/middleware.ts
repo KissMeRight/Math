@@ -1,5 +1,11 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+
+type CookieToSet = {
+  name: string;
+  value: string;
+  options?: CookieOptions;
+};
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -12,11 +18,13 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: CookieToSet[]) { // 👈 ใส่ type ตรงนี้
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
+
           supabaseResponse = NextResponse.next({ request });
+
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           );
@@ -29,7 +37,7 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // ถ้าไม่ได้ login และพยายามเข้า /problems หรือ /ranking → redirect ไป /login
+  // ❌ ยังไม่ได้ login แต่เข้า protected route
   if (
     !user &&
     (request.nextUrl.pathname.startsWith("/problems") ||
@@ -40,7 +48,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // ถ้า login แล้วพยายามเข้า /login หรือ /register → redirect ไป /problems
+  // ✅ login แล้ว แต่ยังจะเข้า login/register
   if (
     user &&
     (request.nextUrl.pathname === "/login" ||
